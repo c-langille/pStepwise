@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "Package: pStepwise\nType: Package\nTitle: Variable selection for linear regression models based on p-values\nVersion: 1.0\nAuthor: Cory Langille\nMaintainer: Cory Langille <lang1729@gmail.com>\nDescription: Allows a user to find the \"best\" predictors for a model based on p-\n    values. Can choose between forward/backward selection or both.\nLicense: GPL-3\nLazyData: TRUE\nRoxygenNote: 5.0.1\n",
+    "created" : 1469217322385.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "931558646",
+    "id" : "306F5244",
+    "lastKnownWriteTime" : 1469221994,
+    "last_content_update" : 1469221994,
+    "path" : "~/R/pStepwise/DESCRIPTION",
+    "project_path" : "DESCRIPTION",
+    "properties" : {
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "dcf"
+}

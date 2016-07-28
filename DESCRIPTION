@@ -1,0 +1,11 @@
+Package: pStepwise
+Type: Package
+Title: Variable selection for linear regression models based on p-values
+Version: 1.0
+Author: Cory Langille
+Maintainer: Cory Langille <lang1729@gmail.com>
+Description: Allows a user to find the "best" predictors for a model based on p-
+    values. Can choose between forward/backward selection or both.
+License: GPL-3
+LazyData: TRUE
+RoxygenNote: 5.0.1
