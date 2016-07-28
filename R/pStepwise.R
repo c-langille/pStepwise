@@ -1,6 +1,7 @@
 #' Easily access p-values from linear models
 #'
-#' This function gives the user easy access to p-values for specific predictors from a linear model
+#' This function gives the user easy access to p-values for specific predictors from a linear model.  It is mainly used
+#' to easily pass p-values to other functions.
 #'
 #' @param pred the predictor from the linear model whose p-value is desired
 #' @param fit a linear model of type "lm" containing the desired predictor
@@ -61,11 +62,11 @@ stepfwd <- function(fitCurrent, fullmodel, aEnter = 0.1) {
   predsIncluded <- rownames(anova(fitCurrent))                                                #list of predictors in current model
   predsFull <- rownames(anova(fullmodel))                                                     #list of predictors in full model
   predsExcluded <- setdiff(predsFull, predsIncluded)                                          #list of predictors not in current model
-  pvals <- sapply(predsExcluded, function(x) as.numeric(extractp(x, fMaker(x, fitCurrent))))  #takes each predictor not in the current model, creates a new lm which includes it, and stores its respective p-value
+  pvals <- sapply(predsExcluded, function(x) as.numeric(extractp(x, fMaker(x, fitCurrent))))  #takes each predictor not in the current model, creates a new lm which includes it, and stores its respective p-value. Really ugly, but the only way I could make it work.
   pvals <- unlist(pvals)
   toAdd <- pvals[which(pvals==min(pvals))]
-  if(length(toAdd)==0) return(fitCurrent)
-  if(toAdd <= aEnter) return(fMaker(names(toAdd), fitCurrent))
+  if(length(toAdd)==0) return(fitCurrent)                                                     #returns original model if no new predictors are added
+  if(toAdd <= aEnter) return(fMaker(names(toAdd), fitCurrent))                                #updates and returns new model with additional predictor
   return(fitCurrent)
 }
 
@@ -82,12 +83,12 @@ stepfwd <- function(fitCurrent, fullmodel, aEnter = 0.1) {
 #' @export
 #'
 stepbwd <- function(fitCurrent, fullmodel, aRemove = 0.1) {
-  predsIncluded <- rownames(anova(fitCurrent))
-  predsIncluded <- predsIncluded[predsIncluded != "Residuals"]
-  pvalues <- sapply(predsIncluded, function(x) as.numeric(extractp(x, fitCurrent)))
-  toRemove <- pvalues[which(pvalues == max(pvalues))]
-  if(toRemove > aRemove) return(fMaker(names(toRemove), fitCurrent, add=F))
-  return(fitCurrent)
+  predsIncluded <- rownames(anova(fitCurrent))                                      #predictors in current model
+  predsIncluded <- predsIncluded[predsIncluded != "Residuals"]                      #removes "residuals" as a predictor
+  pvalues <- sapply(predsIncluded, function(x) as.numeric(extractp(x, fitCurrent))) #checks the p-value for each predictor in current model
+  toRemove <- pvalues[which(pvalues == max(pvalues))]                               #selects the predictor with maximal p-value
+  if(toRemove > aRemove) return(fMaker(names(toRemove), fitCurrent, add=F))         #returns an updated model if the p-value is above the threshold
+  return(fitCurrent)                                                                #else, returns original model
 }
 
 #' Selects the best predictors for a linear model based on p-values
@@ -107,11 +108,11 @@ pStepwise <- function(response, fullmodel, aEnter = 0.1, aRemove = 0.1) {
   fitBwd <- lm(as.formula(paste(response, "~1")))           #creates an empty model to begin with
   while(continue){
     print("Trying to add another predictor")
-    fitFwd = stepfwd(fitBwd, fullmodel)
+    fitFwd = stepfwd(fitBwd, fullmodel)                     #try to add a predictor
     print(fitFwd$call)
-    if(identical(fitFwd, fitBwd) == T) {
+    if(identical(fitFwd, fitBwd) == T) {                    #if no new predictors were added, it will stop
       return(fitFwd)
-    }else {
+    }else {                                                 #try to remove a predictor
       print("Trying to remove a predictor")
       fitBwd = stepbwd(fitFwd, fullmodel)
     }
