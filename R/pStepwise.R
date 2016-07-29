@@ -98,23 +98,33 @@ stepbwd <- function(fitCurrent, fullmodel, aRemove = 0.1) {
 #' @param fullmodel a linear model containing all possible predictors.  Typically of the form lm(y~., data=data)
 #' @param aEnter the threshold for adding new predictors, set to 0.1 by default
 #' @param aRemove the threshold for removing predictors from the current model, set to 0.1 by default
+#' @param method 'forward' will only add predictors, 'back' will only remove predictors and 'both' will both add and remove predictors.  Set to 'both' by default.
 #' @return a linear model of type lm containing the "best" predictors
 #' @author Cory Langille <lang1729@gmail.com>
 #' @seealso extractp, stepfwd, stepbwd, fMaker
 #' @export
 #'
-pStepwise <- function(response, fullmodel, aEnter = 0.1, aRemove = 0.1) {
+pStepwise <- function(response, fullmodel, method = "both", aEnter = 0.1, aRemove = 0.1) {
   continue <- TRUE
-  fitBwd <- lm(as.formula(paste(response, "~1")))           #creates an empty model to begin with
+  fitFwd <- fullmodel                                             #creates the initial model for the 'back' method
+  fitBwd <- lm(as.formula(paste(response, "~1")))                 #creates the initial model for 'forward'/'both' methods
   while(continue){
-    print("Trying to add another predictor")
-    fitFwd = stepfwd(fitBwd, fullmodel)                     #try to add a predictor
-    print(fitFwd$call)
-    if(identical(fitFwd, fitBwd) == T) {                    #if no new predictors were added, it will stop
-      return(fitFwd)
-    }else {                                                 #try to remove a predictor
-      print("Trying to remove a predictor")
-      fitBwd = stepbwd(fitFwd, fullmodel)
+    if(method != 'back'){
+      fitFwd <- stepfwd(fitBwd, fullmodel, aEnter = aEnter)       #try to add a predictor
+      if(identical(fitFwd, fitBwd) == T) {                        #if no new predictors were added, it will stop
+        return(fitFwd)
+      }else if(method == 'both'){
+        fitBwd = stepbwd(fitFwd, fullmodel, aRemove = aRemove)    #try to remove a predictor
+      } else {
+        fitBwd <- fitFwd
+      }
+    } else if(method =='back'){
+      fitBwd <- stepbwd(fitFwd, fullmodel, aRemove = aRemove)
+      if(identical(fitFwd, fitBwd)==T) {
+        return(fitFwd)
+      } else {
+        fitFwd <- fitBwd
+      }
     }
-  }
+ }
 }

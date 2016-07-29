@@ -15,7 +15,8 @@ extractp(pred, fit)
 the p-value for the desired predictor from the linear model
 }
 \description{
-This function gives the user easy access to p-values for specific predictors from a linear model
+This function gives the user easy access to p-values for specific predictors from a linear model.  It is mainly used
+to easily pass p-values to other functions.
 }
 \author{
 Cory Langille <lang1729@gmail.com>

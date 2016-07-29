@@ -4,12 +4,15 @@
 \alias{pStepwise}
 \title{Selects the best predictors for a linear model based on p-values}
 \usage{
-pStepwise(response, fullmodel, aEnter = 0.1, aRemove = 0.1)
+pStepwise(response, fullmodel, method = "both", aEnter = 0.1,
+  aRemove = 0.1)
 }
 \arguments{
 \item{response}{the response variable of interest in the model}
 
 \item{fullmodel}{a linear model containing all possible predictors.  Typically of the form lm(y~., data=data)}
+
+\item{method}{'forward' will only add predictors, 'back' will only remove predictors and 'both' will both add and remove predictors.  Set to 'both' by default.}
 
 \item{aEnter}{the threshold for adding new predictors, set to 0.1 by default}
 
