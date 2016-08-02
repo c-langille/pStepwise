@@ -55,18 +55,19 @@ fMaker <- function(pred, fitCurrent, add=T) {
 #' @param fitCurrent the current model of type "lm"
 #' @param fullmodel a linear model containing all possible predictors.  Typically of the form lm(y~., data=data)
 #' @param aEnter the threshold for adding the predictor, set to 0.1 be default
+#' @param forcedOut vector of predictors that will be forced out of the final model
 #' @return an updated linear model of type "lm"
 #' @export
 #'
-stepfwd <- function(fitCurrent, fullmodel, aEnter = 0.1) {
-  predsIncluded <- rownames(anova(fitCurrent))                                                #list of predictors in current model
-  predsFull <- rownames(anova(fullmodel))                                                     #list of predictors in full model
-  predsExcluded <- setdiff(predsFull, predsIncluded)                                          #list of predictors not in current model
-  pvals <- sapply(predsExcluded, function(x) as.numeric(extractp(x, fMaker(x, fitCurrent))))  #takes each predictor not in the current model, creates a new lm which includes it, and stores its respective p-value. Really ugly, but the only way I could make it work.
+stepfwd <- function(fitCurrent, fullmodel, aEnter = 0.1, forcedOut = NULL) {
+  predsInModel <- rownames(anova(fitCurrent))                                                   #list of predictors in current model
+  predsFull <- rownames(anova(fullmodel))                                                       #list of predictors in full model
+  predsNotInModel <- setdiff(predsFull, predsInModel)                                           #list of predictors not in current model, not including forced out predictors
+  pvals <- sapply(predsNotInModel, function(x) as.numeric(extractp(x, fMaker(x, fitCurrent))))  #takes each predictor not in the current model, creates a new lm which includes it, and stores its respective p-value. Really ugly, but the only way I could make it work.
   pvals <- unlist(pvals)
-  toAdd <- pvals[which(pvals==min(pvals))]
-  if(length(toAdd)==0) return(fitCurrent)                                                     #returns original model if no new predictors are added
-  if(toAdd <= aEnter) return(fMaker(names(toAdd), fitCurrent))                                #updates and returns new model with additional predictor
+  toAdd <- pvals[which(pvals==min(pvals))]                                             
+  if(length(toAdd)==0) return(fitCurrent)                                                       #returns original model if no new predictors are added
+  if(toAdd <= aEnter) return(fMaker(names(toAdd), fitCurrent))                                  #updates and returns new model with additional predictor
   return(fitCurrent)
 }
 
@@ -78,17 +79,19 @@ stepfwd <- function(fitCurrent, fullmodel, aEnter = 0.1) {
 #'
 #' @param fitCurrent the current model of type "lm"
 #' @param fullmodel a linear model containing all possible predictors.  Typically of the form lm(y~., data=data)
+#' @param forcedIn vector of predictors that will be forced into the final model
 #' @param aRemove the threshold for removing the predictor, set to 0.1 by default
 #' @return an updated linear model of type "lm"
 #' @export
 #'
-stepbwd <- function(fitCurrent, fullmodel, aRemove = 0.1) {
-  predsIncluded <- rownames(anova(fitCurrent))                                      #predictors in current model
-  predsIncluded <- predsIncluded[predsIncluded != "Residuals"]                      #removes "residuals" as a predictor
-  pvalues <- sapply(predsIncluded, function(x) as.numeric(extractp(x, fitCurrent))) #checks the p-value for each predictor in current model
-  toRemove <- pvalues[which(pvalues == max(pvalues))]                               #selects the predictor with maximal p-value
-  if(toRemove > aRemove) return(fMaker(names(toRemove), fitCurrent, add=F))         #returns an updated model if the p-value is above the threshold
-  return(fitCurrent)                                                                #else, returns original model
+stepbwd <- function(fitCurrent, fullmodel, aRemove = 0.1, forcedIn = NULL) {
+  predsIncluded <- rownames(anova(fitCurrent))                                               #predictors in current model
+  predsIncluded <- predsIncluded[predsIncluded != "Residuals" & predsIncluded != forcedIn]  #removes "residuals" and forced in predictors
+  pvalues <- sapply(predsIncluded, function(x) as.numeric(extractp(x, fitCurrent)))          #checks the p-value for each predictor in current model
+  toRemove <- pvalues[which(pvalues == max(pvalues))]                                        #selects the predictor with maximal p-value
+  if(length(toRemove)==0) return(fitCurrent)  
+  if(toRemove > aRemove) return(fMaker(names(toRemove), fitCurrent, add=F))                  #returns an updated model if the p-value is above the threshold
+  return(fitCurrent)                                                                         #else, returns original model
 }
 
 #' Selects the best predictors for a linear model based on p-values
@@ -103,18 +106,20 @@ stepbwd <- function(fitCurrent, fullmodel, aRemove = 0.1) {
 #' @seealso extractp, stepfwd, stepbwd, fMaker
 #' @export
 #'
-pStepwise <- function(response, fullmodel, aEnter = 0.1, aRemove = 0.1) {
+pStepwise <- function(response, fullmodel, aEnter = 0.1, aRemove = 0.1, forcedIn = NULL, forcedOut = NULL) {
   continue <- TRUE
   fitBwd <- lm(as.formula(paste(response, "~1")))           #creates an empty model to begin with
+  for(pred in forcedIn) fitBwd <- fMaker(pred, fitBwd)      #adds in forced predictors
+  for(pred in forcedOut) fullmodel <- fMaker(pred, fullmodel, add=F)
   while(continue){
     print("Trying to add another predictor")
-    fitFwd = stepfwd(fitBwd, fullmodel)                     #try to add a predictor
+    fitFwd = stepfwd(fitBwd, fullmodel, forcedOut = forcedOut)                     #try to add a predictor
     print(fitFwd$call)
     if(identical(fitFwd, fitBwd) == T) {                    #if no new predictors were added, it will stop
       return(fitFwd)
     }else {                                                 #try to remove a predictor
       print("Trying to remove a predictor")
-      fitBwd = stepbwd(fitFwd, fullmodel)
+      fitBwd = stepbwd(fitFwd, fullmodel, forcedIn = forcedIn)
     }
   }
 }
