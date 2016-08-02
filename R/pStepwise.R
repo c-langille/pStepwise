@@ -86,8 +86,10 @@ stepfwd <- function(fitCurrent, fullmodel, aEnter = 0.1, forcedOut = NULL) {
 #'
 stepbwd <- function(fitCurrent, fullmodel, aRemove = 0.1, forcedIn = NULL) {
   predsIncluded <- rownames(anova(fitCurrent))                                               #predictors in current model
-  predsIncluded <- predsIncluded[predsIncluded != "Residuals" & predsIncluded != forcedIn]  #removes "residuals" and forced in predictors
+  predsIncluded <- predsIncluded[predsIncluded != "Residuals" & predsIncluded != forcedIn]   #removes "residuals" and forced in predictors
   pvalues <- sapply(predsIncluded, function(x) as.numeric(extractp(x, fitCurrent)))          #checks the p-value for each predictor in current model
+  pvalues <- unlist(pvalues)
+  if(length(pvalues)==0) return(fitCurrent) 
   toRemove <- pvalues[which(pvalues == max(pvalues))]                                        #selects the predictor with maximal p-value
   if(length(toRemove)==0) return(fitCurrent)  
   if(toRemove > aRemove) return(fMaker(names(toRemove), fitCurrent, add=F))                  #returns an updated model if the p-value is above the threshold
