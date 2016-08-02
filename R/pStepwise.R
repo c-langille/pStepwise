@@ -86,7 +86,8 @@ stepfwd <- function(fitCurrent, fullmodel, aEnter = 0.1, forcedOut = NULL) {
 #'
 stepbwd <- function(fitCurrent, fullmodel, aRemove = 0.1, forcedIn = NULL) {
   predsIncluded <- rownames(anova(fitCurrent))                                               #predictors in current model
-  predsIncluded <- predsIncluded[predsIncluded != "Residuals" & predsIncluded != forcedIn]   #removes "residuals" and forced in predictors
+  predsIncluded <- predsIncluded[(predsIncluded != "Residuals")]                             #removes "residuals" from predictors
+  predsIncluded <- setdiff(predsIncluded, intersect(predsIncluded, forcedIn))
   pvalues <- sapply(predsIncluded, function(x) as.numeric(extractp(x, fitCurrent)))          #checks the p-value for each predictor in current model
   pvalues <- unlist(pvalues)
   if(length(pvalues)==0) return(fitCurrent) 
@@ -114,13 +115,12 @@ pStepwise <- function(response, fullmodel, aEnter = 0.1, aRemove = 0.1, forcedIn
   for(pred in forcedIn) fitBwd <- fMaker(pred, fitBwd)      #adds in forced predictors
   for(pred in forcedOut) fullmodel <- fMaker(pred, fullmodel, add=F)
   while(continue){
-    print("Trying to add another predictor")
     fitFwd = stepfwd(fitBwd, fullmodel, forcedOut = forcedOut)                     #try to add a predictor
-    print(fitFwd$call)
     if(identical(fitFwd, fitBwd) == T) {                    #if no new predictors were added, it will stop
+      cat("Predictors forced in: ", forcedIn, "\n")
+      cat("Predictors forced out: ", forcedOut)
       return(fitFwd)
     }else {                                                 #try to remove a predictor
-      print("Trying to remove a predictor")
       fitBwd = stepbwd(fitFwd, fullmodel, forcedIn = forcedIn)
     }
   }
