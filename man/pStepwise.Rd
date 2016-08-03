@@ -4,27 +4,41 @@
 \alias{pStepwise}
 \title{Selects the best predictors for a linear model based on p-values}
 \usage{
-pStepwise(response, fullmodel, aEnter = 0.1, aRemove = 0.1)
+pStepwise(response, fullmodel, aEnter = 0.1,
+                 aRemove = 0.1, forcedIn = NULL, forcedOut = NULL)
 }
 \arguments{
 \item{response}{the response variable of interest in the model}
 
-\item{fullmodel}{a linear model containing all possible predictors.  Typically of the form lm(y~., data=data)}
+\item{fullmodel}{a linear model containing all possible predictors, typically of the form lm(y ~ ., data = data)}
 
 \item{aEnter}{the threshold for adding new predictors, set to 0.1 by default}
 
 \item{aRemove}{the threshold for removing predictors from the current model, set to 0.1 by default}
+
+\item{forcedIn}{a vector of predictors that will be forced into the final model regardless of their p-values}
+
+\item{forcedOut}{a vector of predictors that will not be included in the final model regardless of their p-values}
 }
 \value{
 a linear model of type lm containing the "best" predictors
 }
 \description{
-This function will create a linear model based on the p-values for each predictor.
+This function will attempt to create the "best' linear model by finding the most significant predictors. A predictor will be included/excluded in the final model if when it is added/removed its p-value is below/above a certain threshold.
+}
+\examples{
+#Using the leafshape dataset from the DAAG package
+data(leafshape)
+attach(leafshape)
+response <- "bladelen"
+fullmodel <- lm(bladelen ~ . , data = leafshape)
+forcedOut <- c("loglen", "logwid", "logpet" )
+pStepwise(response, fullmodel, forcedOut = forcedOut)
 }
 \author{
 Cory Langille <lang1729@gmail.com>
 }
 \seealso{
-extractp, stepfwd, stepbwd, fMaker
+\code{\link{extractp}}, \code{\link{stepfwd}}, \code{\link{stepbwd}}, \code{\link{fMaker}}
 }
 

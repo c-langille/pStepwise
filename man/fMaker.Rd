@@ -19,4 +19,24 @@ the updated model of type "lm"
 \description{
 This function takes a string and a linear model and either adds the predictor to the model, or removes it.
 }
+\examples{
+#Using the leafshape data set from the DAAG package
+
+#Adding a predictor to a linear model
+data(leafshape)
+attach(leafshape)
+currentModel <- lm(bladelen~bladewid + latitude, data = leafshape)
+newModel <- fMaker("petiole", currentModel)
+newModel$call
+#lm(formula = bladelen ~ bladewid + latitude + petiole, data = leafshape)
+
+#Removing a predictor from a linear model
+currentModel <- lm(bladelen~bladewid + latitude, data = leafshape)
+newModel <- fMaker("latitude", currentModel, add = FALSE)
+newModel$call
+#lm(formula = bladelen ~ bladewid, data = leafshape)
+}
+\seealso{
+\code{\link{pStepwise}}
+}
 

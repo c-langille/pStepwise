@@ -15,12 +15,22 @@ extractp(pred, fit)
 the p-value for the desired predictor from the linear model
 }
 \description{
-This function gives the user easy access to p-values for specific predictors from a linear model
+This function gives the user easy access to p-values for specific predictors from a linear model.  It is mainly used
+to easily pass p-values to other functions.
+}
+\examples{
+#Using the leafshape dataset from the DAAG package
+data(leafshape)
+attach(leafshape)
+currentModel <- lm(bladelen~., data = leafshape)
+extractp("bladewid", currentModel)
+#    bladewid
+#    2.579703e-43
 }
 \author{
 Cory Langille <lang1729@gmail.com>
 }
 \seealso{
-\code{lm}
+\code{\link{lm}}, \code{\link{pStepwise}}
 }
 

@@ -7,7 +7,15 @@
 #' @param fit a linear model of type "lm" containing the desired predictor
 #' @return the p-value for the desired predictor from the linear model
 #' @author Cory Langille <lang1729@gmail.com>
-#' @seealso \code{lm}
+#' @examples
+#' #Using the leafshape dataset from the DAAG package
+#' data(leafshape)
+#' attach(leafshape)
+#' currentModel <- lm(bladelen~., data = leafshape)
+#' extractp("bladewid", currentModel)
+#' #    bladewid
+#' #    2.579703e-43
+#' @seealso \code{\link{lm}}, \code{\link{pStepwise}}
 #' @export
 #'
 extractp <- function(pred, fit) {
@@ -33,7 +41,24 @@ extractp <- function(pred, fit) {
 #' @param pred the predictor to be added or removed from the current model
 #' @param fitCurrent the current model to be updated
 #' @param add by default adds the predictor to to the model.  add=F removes the predictor from the model
+#' @seealso \code{\link{pStepwise}}
 #' @return the updated model of type "lm"
+#' @examples
+#' #Using the leafshape data set from the DAAG package
+#'
+#' #Adding a predictor to a linear model
+#' data(leafshape)
+#' attach(leafshape)
+#' currentModel <- lm(bladelen~bladewid + latitude, data = leafshape)
+#' newModel <- fMaker("petiole", currentModel)
+#' newModel$call
+#' #lm(formula = bladelen ~ bladewid + latitude + petiole, data = leafshape)
+#'
+#' #Removing a predictor from a linear model
+#' currentModel <- lm(bladelen~bladewid + latitude, data = leafshape)
+#' newModel <- fMaker("latitude", currentModel, add = FALSE)
+#' newModel$call
+#' #lm(formula = bladelen ~ bladewid, data = leafshape)
 #' @export
 #'
 fMaker <- function(pred, fitCurrent, add=T) {
@@ -56,6 +81,7 @@ fMaker <- function(pred, fitCurrent, add=T) {
 #' @param fullmodel a linear model containing all possible predictors.  Typically of the form lm(y~., data=data)
 #' @param aEnter the threshold for adding the predictor, set to 0.1 be default
 #' @param forcedOut vector of predictors that will be forced out of the final model
+#' @seealso \code{\link{pStepwise}}
 #' @return an updated linear model of type "lm"
 #' @export
 #'
@@ -63,9 +89,10 @@ stepfwd <- function(fitCurrent, fullmodel, aEnter = 0.1, forcedOut = NULL) {
   predsInModel <- rownames(anova(fitCurrent))                                                   #list of predictors in current model
   predsFull <- rownames(anova(fullmodel))                                                       #list of predictors in full model
   predsNotInModel <- setdiff(predsFull, predsInModel)                                           #list of predictors not in current model, not including forced out predictors
-  pvals <- sapply(predsNotInModel, function(x) as.numeric(extractp(x, fMaker(x, fitCurrent))))  #takes each predictor not in the current model, creates a new lm which includes it, and stores its respective p-value. Really ugly, but the only way I could make it work.
-  pvals <- unlist(pvals)
-  toAdd <- pvals[which(pvals==min(pvals))]                                                      #possible new predictor
+  pvalues <- sapply(predsNotInModel, function(x) as.numeric(extractp(x, fMaker(x, fitCurrent))))#takes each predictor not in the current model, creates a new lm which includes it, and stores its respective p-value. Really ugly, but the only way I could make it work.
+  pvalues <- unlist(pvalues)
+  print(pvalues)
+  toAdd <- pvalues[which(pvalues==min(pvalues))]                                                #possible new predictor
   if(length(toAdd)==0) return(fitCurrent)                                                       #returns original model if no new predictors are added
   if(toAdd <= aEnter) return(fMaker(names(toAdd), fitCurrent))                                  #updates and returns new model with additional predictor
   return(fitCurrent)
@@ -82,6 +109,7 @@ stepfwd <- function(fitCurrent, fullmodel, aEnter = 0.1, forcedOut = NULL) {
 #' @param forcedIn vector of predictors that will be forced into the final model
 #' @param aRemove the threshold for removing the predictor, set to 0.1 by default
 #' @return an updated linear model of type "lm"
+#' @seealso \code{\link{pStepwise}}
 #' @export
 #'
 stepbwd <- function(fitCurrent, fullmodel, aRemove = 0.1, forcedIn = NULL) {
@@ -92,21 +120,33 @@ stepbwd <- function(fitCurrent, fullmodel, aRemove = 0.1, forcedIn = NULL) {
   pvalues <- unlist(pvalues)
   if(length(pvalues)==0) return(fitCurrent)                                                  #returns current model if there are no more possible predictors to add
   toRemove <- pvalues[which(pvalues == max(pvalues))]                                        #selects the predictor with maximal p-value
-  if(length(toRemove)==0) return(fitCurrent)  
+  if(length(toRemove)==0) return(fitCurrent)
   if(toRemove > aRemove) return(fMaker(names(toRemove), fitCurrent, add=F))                  #returns an updated model if the p-value is above the threshold
   return(fitCurrent)                                                                         #else, returns original model
 }
 
 #' Selects the best predictors for a linear model based on p-values
 #'
-#' This function will create a linear model based on the p-values for each predictor.
+#' This function will attempt to create the "best' linear model by finding the most significant predictors. A predictor will be included/excluded in the final model if when it is added/removed its p-value is below/above a certain threshold.
+#' @usage pStepwise(response, fullmodel, aEnter = 0.1,
+#'                  aRemove = 0.1, forcedIn = NULL, forcedOut = NULL)
 #' @param response the response variable of interest in the model
-#' @param fullmodel a linear model containing all possible predictors.  Typically of the form lm(y~., data=data)
+#' @param fullmodel a linear model containing all possible predictors, typically of the form lm(y ~ ., data = data)
 #' @param aEnter the threshold for adding new predictors, set to 0.1 by default
 #' @param aRemove the threshold for removing predictors from the current model, set to 0.1 by default
+#' @param forcedIn a vector of predictors that will be forced into the final model regardless of their p-values
+#' @param forcedOut a vector of predictors that will not be included in the final model regardless of their p-values
 #' @return a linear model of type lm containing the "best" predictors
 #' @author Cory Langille <lang1729@gmail.com>
-#' @seealso extractp, stepfwd, stepbwd, fMaker
+#' @seealso \code{\link{extractp}}, \code{\link{stepfwd}}, \code{\link{stepbwd}}, \code{\link{fMaker}}
+#' @examples
+#' #Using the leafshape dataset from the DAAG package
+#' data(leafshape)
+#' attach(leafshape)
+#' response <- "bladelen"
+#' fullmodel <- lm(bladelen ~ . , data = leafshape)
+#' forcedOut <- c("loglen", "logwid", "logpet" )
+#' pStepwise(response, fullmodel, forcedOut = forcedOut)
 #' @export
 #'
 pStepwise <- function(response, fullmodel, aEnter = 0.1, aRemove = 0.1, forcedIn = NULL, forcedOut = NULL) {

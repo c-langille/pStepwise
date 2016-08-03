@@ -4,7 +4,7 @@
 \alias{stepfwd}
 \title{Adds a single predictor to a linear model based on its p-value}
 \usage{
-stepfwd(fitCurrent, fullmodel, aEnter = 0.1)
+stepfwd(fitCurrent, fullmodel, aEnter = 0.1, forcedOut = NULL)
 }
 \arguments{
 \item{fitCurrent}{the current model of type "lm"}
@@ -12,11 +12,16 @@ stepfwd(fitCurrent, fullmodel, aEnter = 0.1)
 \item{fullmodel}{a linear model containing all possible predictors.  Typically of the form lm(y~., data=data)}
 
 \item{aEnter}{the threshold for adding the predictor, set to 0.1 be default}
+
+\item{forcedOut}{vector of predictors that will be forced out of the final model}
 }
 \value{
 an updated linear model of type "lm"
 }
 \description{
 This function will try and add a new predictor to a current model.  A predictor will be added if it has minimum p-value among all predictors and its p-value is below a certain threshold
+}
+\seealso{
+\code{\link{pStepwise}}
 }
 

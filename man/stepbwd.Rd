@@ -4,7 +4,7 @@
 \alias{stepbwd}
 \title{Removes a single predictor from a linear model based on its p-value}
 \usage{
-stepbwd(fitCurrent, fullmodel, aRemove = 0.1)
+stepbwd(fitCurrent, fullmodel, aRemove = 0.1, forcedIn = NULL)
 }
 \arguments{
 \item{fitCurrent}{the current model of type "lm"}
@@ -12,11 +12,16 @@ stepbwd(fitCurrent, fullmodel, aRemove = 0.1)
 \item{fullmodel}{a linear model containing all possible predictors.  Typically of the form lm(y~., data=data)}
 
 \item{aRemove}{the threshold for removing the predictor, set to 0.1 by default}
+
+\item{forcedIn}{vector of predictors that will be forced into the final model}
 }
 \value{
 an updated linear model of type "lm"
 }
 \description{
 This function will try and remove a single predictor from a current linear model.  A predictor will be removed if it has maximal p-value and its p-value is greater than a certain threshold.
+}
+\seealso{
+\code{\link{pStepwise}}
 }
 
