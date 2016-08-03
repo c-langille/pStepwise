@@ -91,7 +91,6 @@ stepfwd <- function(fitCurrent, fullmodel, aEnter = 0.1, forcedOut = NULL) {
   predsNotInModel <- setdiff(predsFull, predsInModel)                                           #list of predictors not in current model, not including forced out predictors
   pvalues <- sapply(predsNotInModel, function(x) as.numeric(extractp(x, fMaker(x, fitCurrent))))#takes each predictor not in the current model, creates a new lm which includes it, and stores its respective p-value. Really ugly, but the only way I could make it work.
   pvalues <- unlist(pvalues)
-  print(pvalues)
   toAdd <- pvalues[which(pvalues==min(pvalues))]                                                #possible new predictor
   if(length(toAdd)==0) return(fitCurrent)                                                       #returns original model if no new predictors are added
   if(toAdd <= aEnter) return(fMaker(names(toAdd), fitCurrent))                                  #updates and returns new model with additional predictor
