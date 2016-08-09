@@ -16,6 +16,7 @@
 #' #    bladewid
 #' #    2.579703e-43
 #' @seealso \code{\link{lm}}, \code{\link{pStepwise}}
+#' @import stats
 #' @export
 #'
 extractp <- function(pred, fit) {
@@ -64,11 +65,7 @@ extractp <- function(pred, fit) {
 fMaker <- function(pred, fitCurrent, add=T) {
   addNew <- as.formula(paste(".~.+", pred))
   remNew <- as.formula(paste(".~.-", pred))
-  if(add) {
-    return(update(fitCurrent, addNew))
-  }  else {
-    return(update(fitCurrent, remNew))
-  }
+  ifelse(add, return(update(fitCurrent, addNew)), return(update(fitCurrent, remNew)))
 }
 
 
@@ -89,8 +86,7 @@ stepfwd <- function(fitCurrent, fullmodel, aEnter = 0.1, forcedOut = NULL) {
   predsInModel <- rownames(anova(fitCurrent))                                                   #list of predictors in current model
   predsFull <- rownames(anova(fullmodel))                                                       #list of predictors in full model
   predsNotInModel <- setdiff(predsFull, predsInModel)                                           #list of predictors not in current model, not including forced out predictors
-  pvalues <- sapply(predsNotInModel, function(x) as.numeric(extractp(x, fMaker(x, fitCurrent))))#takes each predictor not in the current model, creates a new lm which includes it, and stores its respective p-value. Really ugly, but the only way I could make it work.
-  pvalues <- unlist(pvalues)
+  pvalues <- unlist(sapply(predsNotInModel, function(x) as.numeric(extractp(x, fMaker(x, fitCurrent)))))#takes each predictor not in the current model, creates a new lm which includes it, and stores its respective p-value. Really ugly, but the only way I could make it work.
   toAdd <- pvalues[which(pvalues==min(pvalues))]                                                #possible new predictor
   if(length(toAdd)==0) return(fitCurrent)                                                       #returns original model if no new predictors are added
   if(toAdd <= aEnter) {
@@ -99,6 +95,7 @@ stepfwd <- function(fitCurrent, fullmodel, aEnter = 0.1, forcedOut = NULL) {
     return(fMaker(names(toAdd), fitCurrent))                                                    #updates and returns new model with additional predictor
   }
   return(fitCurrent)
+
 }
 
 
@@ -119,9 +116,8 @@ stepbwd <- function(fitCurrent, fullmodel, aRemove = 0.1, forcedIn = NULL) {
   predsIncluded <- rownames(anova(fitCurrent))                                               #predictors in current model
   predsIncluded <- predsIncluded[(predsIncluded != "Residuals")]                             #removes "residuals" from predictors
   predsIncluded <- setdiff(predsIncluded, intersect(predsIncluded, forcedIn))                #makes sure no forced in predictors get removed
-  pvalues <- sapply(predsIncluded, function(x) as.numeric(extractp(x, fitCurrent)))          #checks the p-value for each predictor in current model
-  pvalues <- unlist(pvalues)
-  if(length(pvalues)==0) return(fitCurrent)                                                  #returns current model if there are no more possible predictors to add
+  pvalues <- unlist(sapply(predsIncluded, function(x) as.numeric(extractp(x, fitCurrent))))  #checks the p-value for each predictor in current model
+  if(length(pvalues)==0) return(fitCurrent)                                                  #returns current model if there are no more possible predictors to remove
   toRemove <- pvalues[which(pvalues == max(pvalues))]                                        #selects the predictor with maximal p-value
   if(length(toRemove)==0) return(fitCurrent)
   if(toRemove > aRemove){
