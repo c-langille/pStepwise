@@ -20,8 +20,8 @@
 #' @export
 #'
 extractp <- function(pred, fit) {
-  predClasses = attr(fit$terms, "dataClasses")        #finds the predictors that are categorical variables
-  fact = predClasses[names(predClasses) == pred]
+  predClasses <- attr(fit$terms, "dataClasses")        #finds the predictors that are categorical variables
+  fact <- predClasses[names(predClasses) == pred]
   if(fact == "factor") {
     pvalues <- anova(fit)[,5]
     predList <- rownames(anova(fit))
@@ -88,7 +88,7 @@ stepfwd <- function(fitCurrent, fullmodel, aEnter = 0.1, forcedOut = NULL) {
   predsNotInModel <- setdiff(predsFull, predsInModel)                                           #list of predictors not in current model, not including forced out predictors
   pvalues <- unlist(sapply(predsNotInModel, function(x) as.numeric(extractp(x, fMaker(x, fitCurrent)))))#takes each predictor not in the current model, creates a new lm which includes it, and stores its respective p-value. Really ugly, but the only way I could make it work.
   toAdd <- pvalues[which(pvalues==min(pvalues))]                                                #possible new predictor
-  if(length(toAdd)==0) return(fitCurrent)                                                       #returns original model if no new predictors are added
+  if(length(toAdd)==0) return(fitCurrent)                                                       #returns original model if no new predictors can be added
   if(toAdd <= aEnter) {
     cat("Add predictor", names(toAdd), "\n")
     print(summary(fMaker(names(toAdd), fitCurrent)))
@@ -154,15 +154,16 @@ stepbwd <- function(fitCurrent, fullmodel, aRemove = 0.1, forcedIn = NULL) {
 #'
 pStepwise <- function(response, fullmodel, aEnter = 0.1, aRemove = 0.1,
                       forcedIn = NULL, forcedOut = NULL, method = "both") {
-  fitBwd <- lm(as.formula(paste(response, "~1")))                                  #creates an empty model to begin with (poor name choice but it makes the while loop easier)
+  fitBwd <- lm(as.formula(paste(response, "~1")))                                  #creates an empty model to begin with (poor name choice but it makes the while loop below easier)
   for(pred in forcedIn) fitBwd <- fMaker(pred, fitBwd)                             #adds in forced predictors to initial model
   for(pred in forcedOut) fullmodel <- fMaker(pred, fullmodel, add=F)               #removes forced out predictors from fullmodel
-  if(method=="forward") aRemove = 1                                                #makes it impossible to remove predictors
+  if(method=="forward") aRemove <- 1                                               #makes it impossible to remove predictors if using "forward" method
   if(method=="backward") {                                                         #section for backward selection
-    fitFwd <- fullmodel
+    fitFwd <- fullmodel                                                                         #starts with a full model as the inital model
+    cat("Initial model: ")
     print(summary(fullmodel))
     while(TRUE) {
-      fitBwd <- stepbwd(fitFwd, fullmodel, aRemove = aRemove, forcedIn = forcedIn)
+      fitBwd <- stepbwd(fitFwd, fullmodel, aRemove = aRemove, forcedIn = forcedIn)              #continously tries removing predictors until no longer possible
       if(identical(fitFwd, fitBwd)==T) {
         cat("Predictors forced in: ", forcedIn, "\n")
         cat("Predictors forced out: ", forcedOut, "\n")
@@ -174,17 +175,18 @@ pStepwise <- function(response, fullmodel, aEnter = 0.1, aRemove = 0.1,
       }
     }
   }
-  cat("Initial model: ", summary(fitBwd))
+  cat("Initial model: ")
+  print(summary(fitBwd))
   while(TRUE){
-    fitFwd = stepfwd(fitBwd, fullmodel, forcedOut = forcedOut)                     #function that tries to add a predictor to current model
-    if(identical(fitFwd, fitBwd) == T) {                                           #if no new predictors were added, it will stop
+    fitFwd <- stepfwd(fitBwd, fullmodel, aEnter = aEnter, forcedOut = forcedOut)   #function that tries to add a predictor to current model
+    if(identical(fitFwd, fitBwd) == T) {                                           #if new model is the same as old model, then no new predictors were added, it will stop
       cat("Predictors forced in: ", forcedIn, "\n")
       cat("Predictors forced out: ", forcedOut, "\n")
       cat("--------Final model--------", "\n")
       print(summary(fitFwd))
       return(fitFwd)
     }else {                                                                        #function that tries to remove a predictor from current model
-      fitBwd = stepbwd(fitFwd, fullmodel, forcedIn = forcedIn, aRemove = aRemove)
+      fitBwd <- stepbwd(fitFwd, fullmodel, forcedIn = forcedIn, aRemove = aRemove)
     }
   }
 }
