@@ -5,7 +5,8 @@
 \title{Selects the best predictors for a linear model based on p-values}
 \usage{
 pStepwise(response, fullmodel, aEnter = 0.1,
-                 aRemove = 0.1, forcedIn = NULL, forcedOut = NULL, method = "both")
+                 aRemove = 0.1, forcedIn = NULL, forcedOut = NULL,
+                 method = "both", plotRes = FALSE)
 }
 \arguments{
 \item{response}{the response variable of interest in the model}
@@ -21,6 +22,8 @@ pStepwise(response, fullmodel, aEnter = 0.1,
 \item{forcedOut}{a vector of predictors that will not be included in the final model regardless of their p-values}
 
 \item{method}{"forward" will only add predictors, "backward" will only remove predictors and "both" will perfrom stepwise.  "both" by default}
+
+\item{plotRes}{option to print residual plots.  plotRes = TRUE will include normailty plot and fit vs. residual plots. FALSE by defult.}
 }
 \value{
 a linear model of type lm containing the "best" predictors
