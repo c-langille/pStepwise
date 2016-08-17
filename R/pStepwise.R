@@ -176,7 +176,7 @@ pStepwise <- function(response, fullmodel, aEnter = 0.1, aRemove = 0.1,
         cat("Predictors forced in: ", forcedIn, "\n")
         cat("Predictors forced out: ", forcedOut, "\n", "\n")
         print(summary(fitFwd)$coefficients, digits = 4)
-        cat("\n", "Alpha-to-enter = ", aEnter, ",   Alpha-to-remove = ", aRemove)
+        cat("\n", "Alpha-to-enter = ", aEnter, ",   Alpha-to-remove = ", aRemove, "\n")
         if(plotRes == TRUE){
           plot(fitFwd, which=c(1,2))
         }
@@ -194,7 +194,7 @@ pStepwise <- function(response, fullmodel, aEnter = 0.1, aRemove = 0.1,
       cat("Predictors forced in: ", forcedIn, "\n")
       cat("Predictors forced out: ", forcedOut, "\n", "\n")
       print(summary(fitFwd)$coefficients, digits = 4)
-      cat("\n", "Alpha-to-enter = ", aEnter, ",   Alpha-to-remove = ", aRemove)
+      cat("\n", "Alpha-to-enter = ", aEnter, ",   Alpha-to-remove = ", aRemove, "\n")
       if(plotRes == TRUE){
         plot(fitFwd, which=c(1,2))
       }
